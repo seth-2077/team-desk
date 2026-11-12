@@ -1,12 +1,12 @@
-import { SelectControl } from '../../shared/ui/select-control';
-import { useSubmitErrorFocus } from '../../shared/use-submit-error-focus';
-import { Input } from '../../shared/ui/input';
+import { SelectControl } from '../../../shared/ui/select-control';
+import { useSubmitErrorFocus } from '../../../shared/hooks/use-submit-error-focus';
+import { Input } from '../../../shared/ui/input';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { memberInputSchema, type Member, type MemberInput } from './schema';
-import { ApiError, errorMessage } from '../../shared/api';
-import { Field } from '../../shared/ui/field';
-import { FormDialog } from '../../shared/ui/form-dialog';
+import { memberInputSchema, type Member, type MemberInput } from '../schema';
+import { ApiError, errorMessage } from '../../../shared/api';
+import { Field } from '../../../shared/ui/field';
+import { FormDialog } from '../../../shared/ui/form-dialog';
 
 export function toMemberInput(member?: Member): MemberInput {
   return member

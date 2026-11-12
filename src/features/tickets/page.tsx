@@ -12,7 +12,7 @@ import { Button } from '../../shared/ui/button';
 import { DataTable } from '../../shared/ui/data-table';
 import { ConfirmDelete } from '../../shared/ui/confirm-delete';
 import { ticketsApi, ticketsQuery, ticketKeys } from './api';
-import { TicketForm } from './ticket-form';
+import { TicketForm } from './components/ticket-form';
 
 const statuses = {
   open: '待处理',

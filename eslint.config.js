@@ -1,17 +1,65 @@
+import { readdirSync } from 'node:fs';
+import { URL } from 'node:url';
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import hooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
+const featureNames = readdirSync(new URL('./src/features', import.meta.url), {
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+
+const compositionImports = [
+  '**/app/**',
+  '**/routes/**',
+  '**/routes',
+  '**/mocks/**',
+  '**/mocks',
+  '**/main',
+  '**/main.tsx',
+  '**/routeTree.gen',
+  '**/routeTree.gen.ts',
+];
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function createFeatureBoundaryConfig(feature) {
+  const privateFeatureImports = featureNames
+    .filter((name) => name !== feature)
+    .map((name) => ({
+      regex: String.raw`(?:^|/)(?:features/)?${escapeRegExp(name)}/(?!index(?:\.tsx?)?$)`,
+      message: '跨业务模块只通过公开 index.ts 导入。',
+    }));
+
+  return {
+    files: [`src/features/${feature}/**/*.{ts,tsx}`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: compositionImports,
+              message: '业务模块不依赖应用入口、路由或 Mock。',
+            },
+            ...privateFeatureImports,
+          ],
+        },
+      ],
+    },
+  };
+}
+
 export default tseslint.config(
   {
     ignores: [
       'dist/**',
-      '.agents/skills/shadcn/**',
-      '.agents/skills/vercel-react-best-practices/**',
-      '.agents/skills/router-core/**',
-      '.agents/skills/react-router/**',
-      '.agents/skills/router-query/**',
+      '.agents/skills/**',
       '.claude/skills/**',
       'coverage/**',
       'public/mockServiceWorker.js',
@@ -49,36 +97,12 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            '**/features/**',
-            '**/features',
-            '**/app/**',
-            '**/mocks/**',
-          ],
+          patterns: ['**/features/**', '**/features', ...compositionImports],
         },
       ],
     },
   },
-  ...['members', 'tickets'].map((feature) => ({
-    files: [`src/features/${feature}/**/*.{ts,tsx}`],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['**/app/**', '**/mocks/**'],
-              message: '业务模块不依赖 app 或 mocks。',
-            },
-            {
-              regex: `(?:^|/)(?:features/)?${feature === 'members' ? 'tickets' : 'members'}/(?!index(?:\\.tsx?)?$)`,
-              message: '跨业务模块只通过公开 index.ts 导入。',
-            },
-          ],
-        },
-      ],
-    },
-  })),
+  ...featureNames.map(createFeatureBoundaryConfig),
   {
     files: ['src/**/*.{ts,tsx}'],
     ignores: ['src/shared/api.ts'],

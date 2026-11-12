@@ -1,19 +1,10 @@
-import {
-  createRootRoute,
-  createRoute,
-  createRouter,
-  Link,
-  Outlet,
-  redirect,
-} from '@tanstack/react-router';
-import { LayoutDashboard, Users, Ticket, ArrowRight } from 'lucide-react';
+import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
+import { ArrowRight, LayoutDashboard, Ticket, Users } from 'lucide-react';
 import { memberQuerySchema } from '../features/members';
 import { ticketQuerySchema } from '../features/tickets';
-import { MembersPage } from '../features/members';
-import { TicketsPage } from '../features/tickets';
 import { Button } from '../shared/ui/button';
 
-const rootRoute = createRootRoute({
+export const Route = createRootRoute({
   component: Layout,
   errorComponent: ({ error, reset }) => (
     <div role="alert" className="p-12">
@@ -31,38 +22,6 @@ const rootRoute = createRootRoute({
     </div>
   ),
 });
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  beforeLoad: () => {
-    return redirect({
-      to: '/members',
-      search: memberQuerySchema.parse({}),
-      throw: true,
-    });
-  },
-});
-const membersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/members',
-  validateSearch: (search) => memberQuerySchema.parse(search),
-  component: MembersPage,
-});
-const ticketsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/tickets',
-  validateSearch: (search) => ticketQuerySchema.parse(search),
-  component: TicketsPage,
-});
-export const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, membersRoute, ticketsRoute]),
-  defaultPreload: 'intent',
-});
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router;
-  }
-}
 
 function Layout() {
   return (
@@ -104,7 +63,7 @@ function Layout() {
             工单管理
           </Link>
         </nav>
-        <div className="hidden md:block mt-10 rounded-lg bg-slate-50 p-4 text-xs leading-6 text-slate-500 md:absolute md:bottom-6 md:left-6 md:right-6">
+        <div className="mt-10 hidden rounded-lg bg-slate-50 p-4 text-xs leading-6 text-slate-500 md:absolute md:bottom-6 md:left-6 md:right-6 md:block">
           <span className="font-semibold text-slate-700">
             TeamDesk 演示空间
           </span>
@@ -121,7 +80,7 @@ function Layout() {
           <span>团队工作台</span>
           <span className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            开发演示环境{' '}
+            开发演示环境
             <span className="ml-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 font-medium text-slate-600">
               TD
             </span>

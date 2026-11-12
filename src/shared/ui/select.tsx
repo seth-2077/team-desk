@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { OverlayContainerContext } from './overlay-container';
 import { Select as SelectPrimitive } from '@base-ui/react/select';
-import { cn } from '../utils';
+import { cn } from '../utils/cn';
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from 'lucide-react';
 
 const Select = SelectPrimitive.Root;

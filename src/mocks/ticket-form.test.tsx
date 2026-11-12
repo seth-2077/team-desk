@@ -17,7 +17,7 @@ import {
   TicketForm,
   toTicketForm,
   toTicketInput,
-} from '../features/tickets/ticket-form';
+} from '../features/tickets/components/ticket-form';
 import { type Ticket } from '../features/tickets/schema';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -176,7 +176,7 @@ test('历史停用负责人展示，异步搜索仅提供启用成员', async ()
   );
 });
 
-test('服务端字段错误回填负责人并聚焦到选择控件', async () => {
+test('服务端字段错误回填负责人，控件解除禁用后聚焦到选择控件', async () => {
   const user = userEvent.setup();
   form(
     fixture(),

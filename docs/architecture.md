@@ -1,50 +1,34 @@
-# 架构与关键决策
+# 架构
 
-## 依赖方向
+TeamDesk 是 React + TypeScript 单页应用。接口契约见 [api.md](./api.md)，开发约定见 [AGENTS.md](../AGENTS.md)。
 
-app 组装 features 的公开接口；features 内包含 API/Query、页面和显式表单。
-接口类型和校验跟随 features 维护；跨模块通过对方 index.ts 导入，通用能力放 shared。
-shared 不依赖 features/app/mocks；通用分页和错误结构放在 shared/api-types.ts。
-mocks 复用业务模块的接口类型与校验，页面不能导入 Mock。
-ESLint 检查分层依赖、跨模块公开入口及 fetch 调用位置。
+本文描述项目结构与数据边界；React 性能优化参考 [React Best Practices](../.agents/skills/vercel-react-best-practices/AGENTS.md)。本项目使用 Vite 和 TanStack Query，按适用场景采用指南；跨 feature 的 `index.ts` 公开入口保留，feature 内直接引用具体文件。
 
-成员公开 AssigneeSelect、MemberName、查询工厂供工单使用。负责人名称使用同一成员 Query key，成员保存时失效 members 前缀，工单显示会更新；不在工单实体里缓存第二份成员信息。
+## 模块
 
-## 三种状态
+```text
+main.tsx → routeTree.gen.ts → routes/* → features/* → shared/*
+    └─ env.mock 时加载 mocks/* → feature schemas + shared
 
-- URL：搜索、筛选、排序方向、页码和条数；Zod 校验，非法值恢复默认，筛选变化回第一页。
-- Query：列表与成员详情，key 带完整查询，signal 到统一 request；不再复制到全局 store。
-- RHF：表单草稿与动态检查项。用实体 key 切换编辑对象，失败和冲突不 reset。
+features/tickets → features/members/index.ts
+shared 不依赖 routes、features 或 mocks
+```
 
-mutation 成功后等待模块缓存失效；工单冲突时刷新列表缓存但保留当前草稿及原 version，关闭重开才获取新版本，防止静默覆盖。
-删除最后一行会回退一页。排序和分页在 HTTP Mock/后端完成，不对当前页假装进行全量排序。
+- `main.tsx`：创建 QueryClient 和 Router，挂载应用；Mock 模式下启动 MSW。
+- `routes/`：文件路由、布局、URL 校验与重定向；`routeTree.gen.ts` 自动生成，不手改。
+- `features/<业务>/`：`schema.ts` 定义契约，`api.ts` 提供请求与 Query 配置，`page.tsx` 编排页面，`components/` 放业务组件与表单，`index.ts` 声明公开能力。业务 hooks 有复用需求时再建 `hooks/`。
+- `shared/`：`ui/` 放通用 UI，`hooks/` 放通用 hooks，`utils/` 按用途命名纯函数文件（如 `cn.ts`）；请求、通用协议与环境配置分别在 `api.ts`、`api-types.ts`、`env.ts`。
+- `mocks/`：MSW handlers 和内存数据，复用 feature schema；用于 Mock 模式和集成测试，业务页面不导入。
 
-## 表单与 UI
+## 数据流
 
-DataTable 只接收数据/列/状态/回调，内部 TanStack Table v8 无请求 Hook。
-FormDialog 统一标题、布局、提交中禁用、关闭与键盘焦点；Field 提供标签/说明/错误，ConfirmDelete 复用弹窗。
-基础 Input/Textarea/Table 通过固定版本 shadcn CLI 从官方 registry 生成；cn 改为项目既有工具，不增加重复辅助包。
-公共包装承载业务无关行为；复杂工单表单显式组合，不采用万能 JSON 配置引擎。
-useSubmitErrorFocus 在控件解除禁用后聚焦服务端首个字段错误，避免 disabled 阶段聚焦失败。
+- URL 保存列表筛选、排序和分页；路由用 Zod schema 校验搜索参数。
+- TanStack Query 管理服务端数据；React Hook Form 管理表单草稿。
+- 浏览器请求统一经 `shared/api.ts`，校验响应并归一错误；MSW 在 HTTP 层拦截请求。
+- 修改接口时同步更新 feature schema、Mock handlers 和 `docs/api.md`。
 
-成员实体 → toMemberInput → 创建/更新输入。
-工单实体 → toTicketForm → RHF 草稿 → toTicketInput → HTTP 输入。
-表单时间精度为分钟，HTTP 序列化补秒；普通工单转换时丢弃 impact，服务端再次拒绝普通工单的 impact。
-本地时间按团队 Asia/Shanghai 解释，真实后端集成前需确认时区语义。
+## 扩展规则
 
-## HTTP 与 Mock
-
-request 负责地址、取消、JSON、错误结构及成功响应 schema 校验。网络失败/非 JSON 错误有统一用户提示，契约不符不会被当作成功数据展示。
-浏览器 MSW 拦截真实 HTTP 请求；Node 集成测试使用同一 handlers。
-固定初始成员/工单存于当前页面内存，刷新重置；无随机数据、无数据库、无隐式持久化。
-业务规则由服务端同样执行：唯一邮箱、关联删除、启用负责人、条件字段、时间、状态机及 version 原子检查。
-
-## 工程选择
-
-单包、代码式 TanStack Router，避免两个页面引入生成路由插件和额外框架。
-React 19 / TypeScript 5.9 / Vite 7 稳定线，直接依赖精确版本，pnpm 版本及允许的构建脚本明确固定。
-采用 Table v8；
-独立 Prettier 与 ESLint，hooks 是辅助，CI 分别执行格式、lint、类型检查、测试、构建和 E2E。
-
-当前未启用 React Compiler；保留 Table 的 Compiler 兼容性提示。
-构建仍有依赖注释与入口体积提示；本项目未记录或宣称任何提效比例/性能收益。
+- 先把代码放在所属 feature；被多个业务复用且不含业务语义的能力再提到 shared。目录内直接导入具体文件，跨 feature 仅通过 `index.ts`。
+- 测试跟随被测组件；依赖 MSW 的集成测试放 `mocks/`，浏览器流程放 `e2e/`。
+- ESLint 自动发现 feature，禁止跨模块深层导入、shared 依赖上层，以及 feature 依赖路由、启动入口或 mocks。新增业务无需手动登记模块名单。

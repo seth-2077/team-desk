@@ -1,9 +1,9 @@
-import { SelectControl } from '../../shared/ui/select-control';
-import { Input } from '../../shared/ui/input';
+import { SelectControl } from '../../../shared/ui/select-control';
+import { Input } from '../../../shared/ui/input';
 import { useState, type Ref } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { memberQuery, membersQuery } from './api';
-import { memberQuerySchema } from './schema';
+import { memberQuery, membersQuery } from '../api';
+import { memberQuerySchema } from '../schema';
 
 export function AssigneeSelect({
   value,

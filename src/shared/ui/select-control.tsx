@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './select';
-import { cn } from '../utils';
+import { cn } from '../utils/cn';
 
 type SelectControlProps = Omit<
   ComponentProps<typeof SelectTrigger>,

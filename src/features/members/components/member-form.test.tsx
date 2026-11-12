@@ -2,7 +2,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import { MemberForm } from './member-form';
-import { ApiError } from '../../shared/api';
+import { ApiError } from '../../../shared/api';
 
 afterEach(cleanup);
 const member = {

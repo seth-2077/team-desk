@@ -11,7 +11,7 @@ import { Button } from '../../shared/ui/button';
 import { DataTable } from '../../shared/ui/data-table';
 import { ConfirmDelete } from '../../shared/ui/confirm-delete';
 import { membersApi, membersQuery, memberKeys } from './api';
-import { MemberForm } from './member-form';
+import { MemberForm } from './components/member-form';
 
 const roles = { admin: '管理员', agent: '协作成员', viewer: '观察者' };
 export function MembersPage() {

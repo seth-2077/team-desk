@@ -1,7 +1,7 @@
-import { SelectControl } from '../../shared/ui/select-control';
-import { useSubmitErrorFocus } from '../../shared/use-submit-error-focus';
-import { Textarea } from '../../shared/ui/textarea';
-import { Input } from '../../shared/ui/input';
+import { SelectControl } from '../../../shared/ui/select-control';
+import { useSubmitErrorFocus } from '../../../shared/hooks/use-submit-error-focus';
+import { Textarea } from '../../../shared/ui/textarea';
+import { Input } from '../../../shared/ui/input';
 import { z } from 'zod';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,12 +13,12 @@ import {
   transitions,
   type Ticket,
   type TicketInput,
-} from './schema';
-import { AssigneeSelect } from '../members';
-import { ApiError, errorMessage } from '../../shared/api';
-import { Button } from '../../shared/ui/button';
-import { Field } from '../../shared/ui/field';
-import { FormDialog } from '../../shared/ui/form-dialog';
+} from '../schema';
+import { AssigneeSelect } from '../../members';
+import { ApiError, errorMessage } from '../../../shared/api';
+import { Button } from '../../../shared/ui/button';
+import { Field } from '../../../shared/ui/field';
+import { FormDialog } from '../../../shared/ui/form-dialog';
 
 const formSchema = z
   .object({
