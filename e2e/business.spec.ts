@@ -1,4 +1,9 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
+
+async function choose(page: Page, control: Locator, label: string) {
+  await control.click();
+  await page.getByRole('option', { name: label, exact: true }).click();
+}
 
 async function createMember(page: Page, name: string, email: string) {
   await page.getByRole('button', { name: '新增成员' }).click();
@@ -33,20 +38,20 @@ test('成员 CRUD、重复邮箱、筛选和关联删除保护', async ({ page }
   );
   await page.getByLabel('邮箱', { exact: true }).fill('member@example.com');
   await page.getByLabel('姓名', { exact: true }).fill('更新成员');
-  await page.getByLabel('状态', { exact: true }).selectOption('inactive');
+  await choose(page, page.getByLabel('状态', { exact: true }), '停用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(row).toContainText('停用');
-  await page.getByLabel('状态筛选').selectOption('inactive');
+  await choose(page, page.getByLabel('状态筛选'), '停用');
   await page.getByLabel('搜索成员').fill('更新成员');
   await expect(
     page.getByRole('row').filter({ hasText: 'member@example.com' }),
   ).toBeVisible();
   await expect(page).toHaveURL(/status=inactive/);
   await row.getByRole('button', { name: '编辑' }).click();
-  await page.getByLabel('状态', { exact: true }).selectOption('active');
+  await choose(page, page.getByLabel('状态', { exact: true }), '启用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(row).toHaveCount(0);
-  await page.getByLabel('状态筛选').selectOption('');
+  await choose(page, page.getByLabel('状态筛选'), '全部状态');
   await expect(row).toContainText('启用');
   await row.getByRole('button', { name: '删除' }).click();
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
@@ -73,15 +78,14 @@ test('关联成员的工单 CRUD、条件转换、动态项与历史停用负责
   await page.getByRole('button', { name: '新增工单' }).click();
   await page.getByLabel('工单标题').fill('交付流程演练');
   await page.getByLabel('描述', { exact: true }).fill('演练工单完整生命周期');
-  await page.getByLabel('工单类型').selectOption('incident');
+  await choose(page, page.getByLabel('工单类型'), '故障工单');
   await page.getByLabel('影响范围').fill('团队协作');
   await page.getByLabel('搜索负责人').fill('owner@');
-  await expect(
-    page.getByRole('option', { name: '工单负责人 · owner@example.com' }),
-  ).toBeAttached();
-  await page
-    .getByLabel('负责人', { exact: true })
-    .selectOption({ label: '工单负责人 · owner@example.com' });
+  await choose(
+    page,
+    page.getByLabel('负责人', { exact: true }),
+    '工单负责人 · owner@example.com',
+  );
   await page.getByLabel('计划开始时间').fill('2026-11-12T09:00');
   await page.getByLabel('截止时间').fill('2026-11-13T18:00');
   await page.getByRole('button', { name: '添加检查项' }).click();
@@ -102,10 +106,8 @@ test('关联成员的工单 CRUD、条件转换、动态项与历史停用负责
   const row = page.getByRole('row').filter({ hasText: '交付流程演练' });
   await expect(row).toContainText('工单负责人');
   await row.getByRole('button', { name: '编辑' }).click();
-  await page.getByLabel('工单类型').selectOption('normal');
-  await page
-    .getByLabel('工单状态', { exact: true })
-    .selectOption('in_progress');
+  await choose(page, page.getByLabel('工单类型'), '普通工单');
+  await choose(page, page.getByLabel('工单状态', { exact: true }), '处理中');
   await page.getByLabel('完成检查项 1').check();
   const updateRequest = page.waitForRequest(
     (request) =>
@@ -122,20 +124,24 @@ test('关联成员的工单 CRUD、条件转换、动态项与历史停用负责
     .getByRole('row')
     .filter({ hasText: 'owner@example.com' });
   await memberRow.getByRole('button', { name: '编辑' }).click();
-  await page.getByLabel('状态', { exact: true }).selectOption('inactive');
+  await choose(page, page.getByLabel('状态', { exact: true }), '停用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('link', { name: '工单管理' }).click();
   await expect(row).toContainText('工单负责人（已停用）');
   await row.getByRole('button', { name: '编辑' }).click();
+  await page.getByLabel('负责人', { exact: true }).click();
   await expect(
     page.getByRole('option', { name: '工单负责人（已停用，历史负责人）' }),
   ).toBeAttached();
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: '新增工单' }).click();
+  await page.getByLabel('负责人', { exact: true }).click();
   await expect(page.getByRole('option', { name: /林晓/ })).toBeAttached();
   await expect(page.getByRole('option', { name: /工单负责人/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '取消', exact: true }).click();
   await page.screenshot({
     path: 'test-results/tickets-desktop.png',
@@ -180,15 +186,15 @@ test('非法 URL 恢复默认、筛选刷新保留与键盘焦点可用', async 
   await expect(
     page.getByRole('row').filter({ hasText: '排查支付回调延迟' }),
   ).toBeVisible();
-  await expect(page.getByLabel('每页条数')).toHaveValue('10');
-  await page.getByLabel('优先级筛选').selectOption('high');
+  await expect(page.getByLabel('每页条数')).toHaveText('10 条 / 页');
+  await choose(page, page.getByLabel('优先级筛选'), '高');
   await page.getByLabel('搜索工单').fill('支付');
   await expect(
     page.getByRole('row').filter({ hasText: '更新团队使用手册' }),
   ).toHaveCount(0);
   await page.reload();
   await expect(page.getByLabel('搜索工单')).toHaveValue('支付');
-  await expect(page.getByLabel('优先级筛选')).toHaveValue('high');
+  await expect(page.getByLabel('优先级筛选')).toHaveText('高');
   await expect(
     page.getByRole('row').filter({ hasText: '排查支付回调延迟' }),
   ).toBeVisible();
@@ -211,4 +217,35 @@ test('非法 URL 恢复默认、筛选刷新保留与键盘焦点可用', async 
     path: 'test-results/tickets-mobile.png',
     fullPage: true,
   });
+});
+
+test('下拉菜单支持键盘选择、排序分页与弹窗内 Escape', async ({ page }) => {
+  await page.goto('/members');
+  const role = page.getByRole('combobox', { name: '角色筛选' });
+  await role.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.screenshot({
+    path: 'test-results/select-menu.png',
+    fullPage: true,
+  });
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await expect(role).toHaveText('观察者');
+  await expect(page).toHaveURL(/role=viewer/);
+  await choose(page, role, '全部角色');
+  await choose(page, page.getByLabel('排序字段'), '按邮箱排序');
+  await choose(page, page.getByLabel('每页条数'), '5 条 / 页');
+  await expect(page).toHaveURL(/sort=email/);
+  await expect(page).toHaveURL(/pageSize=5/);
+  await page.getByRole('button', { name: '新增成员' }).click();
+  const status = page.getByLabel('状态', { exact: true });
+  await status.click();
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(status).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });

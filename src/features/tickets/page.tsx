@@ -1,3 +1,4 @@
+import { SelectControl } from '../../shared/ui/select-control';
 import { Input } from '../../shared/ui/input';
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -154,42 +155,43 @@ export function TicketsPage() {
           value={search.q}
           onChange={(e) => update({ q: e.target.value })}
         />
-        <select
+        <SelectControl
           aria-label="工单状态筛选"
           className="max-w-36"
           value={search.status}
-          onChange={(e) => update({ status: e.target.value })}
-        >
-          <option value="">全部状态</option>
-          {Object.entries(statuses).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
+          onValueChange={(value) => update({ status: value })}
+          options={[
+            { value: '', label: '全部状态' },
+            ...Object.entries(statuses).map(([value, label]) => ({
+              value,
+              label,
+            })),
+          ]}
+        />
+        <SelectControl
           aria-label="优先级筛选"
           className="max-w-36"
           value={search.priority}
-          onChange={(e) => update({ priority: e.target.value })}
-        >
-          <option value="">全部优先级</option>
-          {Object.entries(priorities).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
+          onValueChange={(value) => update({ priority: value })}
+          options={[
+            { value: '', label: '全部优先级' },
+            ...Object.entries(priorities).map(([value, label]) => ({
+              value,
+              label,
+            })),
+          ]}
+        />
+        <SelectControl
           aria-label="排序字段"
           className="max-w-36"
           value={search.sort}
-          onChange={(e) => update({ sort: e.target.value })}
-        >
-          <option value="title">按标题排序</option>
-          <option value="status">按状态排序</option>
-          <option value="priority">按优先级排序</option>
-        </select>
+          onValueChange={(value) => update({ sort: value })}
+          options={[
+            { value: 'title', label: '按标题排序' },
+            { value: 'status', label: '按状态排序' },
+            { value: 'priority', label: '按优先级排序' },
+          ]}
+        />
         <Button
           variant="outline"
           onClick={() =>
@@ -198,16 +200,17 @@ export function TicketsPage() {
         >
           {search.direction === 'asc' ? '↑ 升序' : '↓ 降序'}
         </Button>
-        <select
+        <SelectControl
           aria-label="每页条数"
           className="max-w-28"
           value={search.pageSize}
-          onChange={(e) => update({ pageSize: e.target.value })}
-        >
-          <option value="5">5 条 / 页</option>
-          <option value="10">10 条 / 页</option>
-          <option value="20">20 条 / 页</option>
-        </select>
+          onValueChange={(value) => update({ pageSize: value })}
+          options={[
+            { value: '5', label: '5 条 / 页' },
+            { value: '10', label: '10 条 / 页' },
+            { value: '20', label: '20 条 / 页' },
+          ]}
+        />
       </div>
       <DataTable
         columns={columns}

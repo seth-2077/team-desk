@@ -1,3 +1,4 @@
+import { SelectControl } from '../../shared/ui/select-control';
 import { useSubmitErrorFocus } from '../../shared/use-submit-error-focus';
 import { Textarea } from '../../shared/ui/textarea';
 import { Input } from '../../shared/ui/input';
@@ -194,17 +195,51 @@ export function TicketForm({
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field id="type" label="工单类型">
-          <select id="type" {...register('type')}>
-            <option value="normal">普通工单</option>
-            <option value="incident">故障工单</option>
-          </select>
+          <Controller
+            control={control}
+            name="type"
+            render={({ field }) => (
+              <SelectControl
+                id="type"
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.type}
+                aria-describedby="type-error"
+                options={[
+                  { value: 'normal', label: '普通工单' },
+                  { value: 'incident', label: '故障工单' },
+                ]}
+              />
+            )}
+          />
         </Field>
         <Field id="priority" label="优先级">
-          <select id="priority" {...register('priority')}>
-            <option value="low">低</option>
-            <option value="medium">中</option>
-            <option value="high">高</option>
-          </select>
+          <Controller
+            control={control}
+            name="priority"
+            render={({ field }) => (
+              <SelectControl
+                id="priority"
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.priority}
+                aria-describedby="priority-error"
+                options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                ]}
+              />
+            )}
+          />
         </Field>
       </div>
       {type === 'incident' && (
@@ -229,6 +264,7 @@ export function TicketForm({
           render={({ field }) => (
             <AssigneeSelect
               selectRef={field.ref}
+              disabled={isSubmitting}
               onBlur={field.onBlur}
               value={field.value}
               onChange={field.onChange}
@@ -268,15 +304,29 @@ export function TicketForm({
         error={errors.status?.message}
         description="待处理 → 处理中 → 已解决 → 已关闭；已关闭不可恢复。"
       >
-        <select id="ticket-status" {...register('status')}>
-          {(ticket ? transitions[ticket.status] : (['open'] as const)).map(
-            (status) => (
-              <option key={status} value={status}>
-                {statuses[status]}
-              </option>
-            ),
+        <Controller
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <SelectControl
+              id="ticket-status"
+              name={field.name}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={isSubmitting}
+              aria-invalid={!!errors.status}
+              aria-describedby="ticket-status-error"
+              options={[
+                ...(ticket
+                  ? transitions[ticket.status]
+                  : (['open'] as const)
+                ).map((value) => ({ value, label: statuses[value] })),
+              ]}
+            />
           )}
-        </select>
+        />
       </Field>
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">检查项</legend>

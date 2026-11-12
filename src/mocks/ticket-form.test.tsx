@@ -57,7 +57,8 @@ test('故障必填影响范围；切回普通提交不包含影响范围', async
   expect(await screen.findByText('故障工单必须填写影响范围')).toBeVisible();
   expect(view.onSave).not.toHaveBeenCalled();
   await user.type(screen.getByLabelText('影响范围'), '支付服务');
-  await user.selectOptions(screen.getByLabelText('工单类型'), 'normal');
+  await user.click(screen.getByLabelText('工单类型'));
+  await user.click(screen.getByRole('option', { name: '普通工单' }));
   expect(screen.queryByLabelText('影响范围')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: /^保存$/ }));
   await waitFor(() => expect(view.onSave).toHaveBeenCalledTimes(1));
@@ -147,6 +148,8 @@ test('保存期间禁用提交、取消、关闭及 Escape，防止重复提交'
   await user.click(screen.getByRole('button', { name: /^保存$/ }));
   expect(screen.getByRole('button', { name: '保存中…' })).toBeDisabled();
   expect(screen.getByRole('button', { name: '取消' })).toBeDisabled();
+  expect(screen.getByLabelText('工单类型')).toBeDisabled();
+  expect(screen.getByLabelText('负责人', { exact: true })).toBeDisabled();
   await user.keyboard('{Escape}');
   expect(view.onClose).not.toHaveBeenCalled();
   expect(save).toHaveBeenCalledTimes(1);
@@ -156,10 +159,13 @@ test('保存期间禁用提交、取消、关闭及 Escape，防止重复提交'
 test('历史停用负责人展示，异步搜索仅提供启用成员', async () => {
   const user = userEvent.setup();
   form(fixture('t2'));
+  await user.click(screen.getByLabelText('负责人', { exact: true }));
   expect(
     await screen.findByRole('option', { name: '周宁（已停用，历史负责人）' }),
   ).toBeInTheDocument();
+  await user.keyboard('{Escape}');
   await user.type(screen.getByLabelText('搜索负责人'), '林');
+  await user.click(screen.getByLabelText('负责人', { exact: true }));
   expect(
     await screen.findByRole('option', { name: '林晓 · lin@teamdesk.dev' }),
   ).toBeInTheDocument();

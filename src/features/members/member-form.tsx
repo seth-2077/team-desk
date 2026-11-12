@@ -1,6 +1,7 @@
+import { SelectControl } from '../../shared/ui/select-control';
 import { useSubmitErrorFocus } from '../../shared/use-submit-error-focus';
 import { Input } from '../../shared/ui/input';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { memberInputSchema, type Member, type MemberInput } from './schema';
 import { ApiError, errorMessage } from '../../shared/api';
@@ -28,6 +29,7 @@ export function MemberForm({
 }) {
   const {
     register,
+    control,
     handleSubmit,
     setError,
     setFocus,
@@ -83,17 +85,51 @@ export function MemberForm({
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field id="role" label="角色" error={errors.role?.message}>
-          <select id="role" {...register('role')}>
-            <option value="admin">管理员</option>
-            <option value="agent">协作成员</option>
-            <option value="viewer">观察者</option>
-          </select>
+          <Controller
+            control={control}
+            name="role"
+            render={({ field }) => (
+              <SelectControl
+                id="role"
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.role}
+                aria-describedby="role-error"
+                options={[
+                  { value: 'admin', label: '管理员' },
+                  { value: 'agent', label: '协作成员' },
+                  { value: 'viewer', label: '观察者' },
+                ]}
+              />
+            )}
+          />
         </Field>
         <Field id="status" label="状态" error={errors.status?.message}>
-          <select id="status" {...register('status')}>
-            <option value="active">启用</option>
-            <option value="inactive">停用</option>
-          </select>
+          <Controller
+            control={control}
+            name="status"
+            render={({ field }) => (
+              <SelectControl
+                id="status"
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.status}
+                aria-describedby="status-error"
+                options={[
+                  { value: 'active', label: '启用' },
+                  { value: 'inactive', label: '停用' },
+                ]}
+              />
+            )}
+          />
         </Field>
       </div>
     </FormDialog>

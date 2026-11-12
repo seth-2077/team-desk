@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { useRef, type ReactNode } from 'react';
+import { useCallback, useState, useRef, type ReactNode } from 'react';
+import { OverlayContainerContext } from './overlay-container';
 import { FieldGroup } from './field';
 import { Button } from './button';
 
@@ -25,6 +26,11 @@ export function FormDialog({
 }) {
   const returnFocus = useRef(document.activeElement);
   const content = useRef<HTMLDivElement>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const attachContent = useCallback((node: HTMLDivElement | null) => {
+    content.current = node;
+    setContainer(node);
+  }, []);
   return (
     <Dialog.Root
       open
@@ -35,7 +41,7 @@ export function FormDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-950/35 backdrop-blur-[2px]" />
         <Dialog.Content
-          ref={content}
+          ref={attachContent}
           onOpenAutoFocus={(event) => {
             const first = content.current?.querySelector<HTMLElement>(
               'form input:not([type="hidden"]), form textarea, form select, form button[type="button"]',
@@ -54,7 +60,13 @@ export function FormDialog({
             if (busy) e.preventDefault();
           }}
           onEscapeKeyDown={(e) => {
-            if (busy) e.preventDefault();
+            if (
+              busy ||
+              content.current?.querySelector(
+                '[data-slot="select-trigger"][aria-expanded="true"]',
+              )
+            )
+              e.preventDefault();
           }}
           className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
         >
@@ -82,7 +94,9 @@ export function FormDialog({
             className="mt-6 flex flex-col gap-4"
           >
             <fieldset disabled={busy} className="min-w-0">
-              <FieldGroup>{children}</FieldGroup>
+              <OverlayContainerContext.Provider value={container}>
+                <FieldGroup>{children}</FieldGroup>
+              </OverlayContainerContext.Provider>
             </fieldset>
             {error && (
               <p

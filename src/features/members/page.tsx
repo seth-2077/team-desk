@@ -1,3 +1,4 @@
+import { SelectControl } from '../../shared/ui/select-control';
 import { Input } from '../../shared/ui/input';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -122,12 +123,12 @@ export function MembersPage() {
           value={search.q}
           onChange={(e) => update({ q: e.target.value })}
         />
-        <select
+        <SelectControl
           aria-label="角色筛选"
           className="max-w-36"
           value={search.role}
-          onChange={(e) => {
-            const role = e.target.value;
+          onValueChange={(value) => {
+            const role = value;
             if (
               role === '' ||
               role === 'admin' ||
@@ -136,40 +137,43 @@ export function MembersPage() {
             )
               update({ role });
           }}
-        >
-          <option value="">全部角色</option>
-          <option value="admin">管理员</option>
-          <option value="agent">协作成员</option>
-          <option value="viewer">观察者</option>
-        </select>
-        <select
+          options={[
+            { value: '', label: '全部角色' },
+            { value: 'admin', label: '管理员' },
+            { value: 'agent', label: '协作成员' },
+            { value: 'viewer', label: '观察者' },
+          ]}
+        />
+        <SelectControl
           aria-label="状态筛选"
           className="max-w-36"
           value={search.status}
-          onChange={(e) => {
-            const status = e.target.value;
+          onValueChange={(value) => {
+            const status = value;
             if (status === '' || status === 'active' || status === 'inactive')
               update({ status });
           }}
-        >
-          <option value="">全部状态</option>
-          <option value="active">启用</option>
-          <option value="inactive">停用</option>
-        </select>
-        <select
+          options={[
+            { value: '', label: '全部状态' },
+            { value: 'active', label: '启用' },
+            { value: 'inactive', label: '停用' },
+          ]}
+        />
+        <SelectControl
           aria-label="排序字段"
           className="max-w-36"
           value={search.sort}
-          onChange={(e) => {
-            const sort = e.target.value;
+          onValueChange={(value) => {
+            const sort = value;
             if (sort === 'name' || sort === 'email' || sort === 'status')
               update({ sort });
           }}
-        >
-          <option value="name">按姓名排序</option>
-          <option value="email">按邮箱排序</option>
-          <option value="status">按状态排序</option>
-        </select>
+          options={[
+            { value: 'name', label: '按姓名排序' },
+            { value: 'email', label: '按邮箱排序' },
+            { value: 'status', label: '按状态排序' },
+          ]}
+        />
         <Button
           variant="outline"
           onClick={() =>
@@ -178,19 +182,20 @@ export function MembersPage() {
         >
           {search.direction === 'asc' ? '↑ 升序' : '↓ 降序'}
         </Button>
-        <select
+        <SelectControl
           aria-label="每页条数"
           className="max-w-28"
           value={search.pageSize}
-          onChange={(e) => {
-            const n = Number(e.target.value);
+          onValueChange={(value) => {
+            const n = Number(value);
             if (n === 5 || n === 10 || n === 20) update({ pageSize: n });
           }}
-        >
-          <option value="5">5 条 / 页</option>
-          <option value="10">10 条 / 页</option>
-          <option value="20">20 条 / 页</option>
-        </select>
+          options={[
+            { value: '5', label: '5 条 / 页' },
+            { value: '10', label: '10 条 / 页' },
+            { value: '20', label: '20 条 / 页' },
+          ]}
+        />
       </div>
       <DataTable
         columns={columns}

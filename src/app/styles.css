@@ -8,6 +8,9 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--foreground);
+  --color-popover: var(--background);
+  --color-popover-foreground: var(--foreground);
   --color-border: var(--border);
   --color-input: var(--border);
   --color-ring: var(--primary);
@@ -36,7 +39,6 @@
   }
   button,
   input,
-  select,
   textarea {
     font: inherit;
   }
@@ -45,19 +47,6 @@
   }
   button:disabled {
     cursor: not-allowed;
-  }
-  select {
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 8px 11px;
-    background: var(--background);
-    width: 100%;
-    font-size: 14px;
-    min-height: 36px;
-  }
-  select:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 1px;
   }
   a {
     color: inherit;

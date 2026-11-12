@@ -1,3 +1,4 @@
+import { SelectControl } from '../../shared/ui/select-control';
 import { Input } from '../../shared/ui/input';
 import { useState, type Ref } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -11,13 +12,15 @@ export function AssigneeSelect({
   error,
   selectRef,
   onBlur,
+  disabled,
 }: {
   value: string;
   onChange: (id: string) => void;
   historicalId?: string;
   error?: string;
-  selectRef?: Ref<HTMLSelectElement>;
+  selectRef?: Ref<HTMLButtonElement>;
   onBlur?: () => void;
+  disabled?: boolean;
 }) {
   const [search, setSearch] = useState('');
   const members = useQuery(
@@ -32,6 +35,24 @@ export function AssigneeSelect({
   const selected = useQuery({ ...memberQuery(value), enabled: !!value });
   const options = members.data?.items ?? [];
   const previous = selected.data ?? historical.data;
+  const items = [
+    { value: '', label: '请选择负责人' },
+    ...(previous &&
+    (previous.status === 'active' || previous.id === historicalId) &&
+    !options.some((m) => m.id === previous.id)
+      ? [
+          {
+            value: previous.id,
+            label:
+              previous.name +
+              (previous.status === 'inactive'
+                ? '（已停用，历史负责人）'
+                : '（当前负责人）'),
+          },
+        ]
+      : []),
+    ...options.map((m) => ({ value: m.id, label: m.name + ' · ' + m.email })),
+  ];
   return (
     <div className="flex flex-col gap-2">
       <Input
@@ -40,36 +61,21 @@ export function AssigneeSelect({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <select
+      <SelectControl
         id="assigneeId"
         ref={selectRef}
         onBlur={onBlur}
+        disabled={disabled}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onValueChange={onChange}
+        options={items}
         aria-invalid={!!error}
         aria-describedby={
           error
             ? 'assigneeId-description assigneeId-error'
             : 'assigneeId-description'
         }
-      >
-        <option value="">请选择负责人</option>
-        {previous &&
-          (previous.status === 'active' || previous.id === historicalId) &&
-          !options.some((m) => m.id === previous.id) && (
-            <option value={previous.id}>
-              {previous.name}
-              {previous.status === 'inactive'
-                ? '（已停用，历史负责人）'
-                : '（当前负责人）'}
-            </option>
-          )}
-        {options.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name} · {m.email}
-          </option>
-        ))}
-      </select>
+      />
       {members.isFetching && (
         <p role="status" className="text-xs text-slate-500">
           搜索中…
