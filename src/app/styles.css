@@ -1,0 +1,66 @@
+@import 'tailwindcss' source('../');
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-destructive: #dc2626;
+}
+:root {
+  --background: #ffffff;
+  --foreground: #17233b;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #eff6ff;
+  --border: #d8deea;
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--foreground);
+  background: #f6f8fc;
+  font-synthesis: none;
+}
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    margin: 0;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  select {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 11px;
+    background: var(--background);
+    width: 100%;
+    font-size: 14px;
+    min-height: 36px;
+  }
+  select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

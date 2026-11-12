@@ -1,0 +1,15 @@
+pnpm-lock.yaml
+public/mockServiceWorker.js
+node_modules
+dist
+coverage
+playwright-report
+test-results
+
+# 固定来源的第三方 Skills 保留原始内容
+.agents/skills/shadcn
+.agents/skills/vercel-react-best-practices
+.agents/skills/router-core
+.agents/skills/react-router
+.agents/skills/router-query
+.claude/skills
