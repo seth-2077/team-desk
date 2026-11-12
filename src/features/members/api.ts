@@ -25,14 +25,20 @@ export const membersApi = {
       method: 'DELETE',
     }),
 };
-export const memberKeys = { all: ['members'] as const };
+export const memberKeys = {
+  all: ['members'] as const,
+  lists: () => [...memberKeys.all, 'list'] as const,
+  list: (query: MemberQuery) => [...memberKeys.lists(), query] as const,
+  details: () => [...memberKeys.all, 'detail'] as const,
+  detail: (id: string) => [...memberKeys.details(), id] as const,
+};
 export const membersQuery = (query: MemberQuery) =>
   queryOptions({
-    queryKey: [...memberKeys.all, 'list', query],
+    queryKey: memberKeys.list(query),
     queryFn: ({ signal }) => membersApi.list(query, signal),
   });
 export const memberQuery = (id: string) =>
   queryOptions({
-    queryKey: [...memberKeys.all, 'detail', id],
+    queryKey: memberKeys.detail(id),
     queryFn: ({ signal }) => membersApi.get(id, signal),
   });

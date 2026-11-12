@@ -2,19 +2,21 @@
 
 接口类型和 Zod 校验随业务维护在 src/features/members/schema.ts、src/features/tickets/schema.ts；通用分页和错误结构在 src/shared/api-types.ts。
 
-| 方法   | 路径             | 输入                         | 成功             |
-| ------ | ---------------- | ---------------------------- | ---------------- |
-| GET    | /api/members     | MemberQuery                  | 200 Page<Member> |
-| GET    | /api/members/:id | id                           | 200 Member       |
-| POST   | /api/members     | MemberInput                  | 201 Member       |
-| PUT    | /api/members/:id | MemberInput                  | 200 Member       |
-| DELETE | /api/members/:id | id                           | 204              |
-| GET    | /api/tickets     | TicketQuery                  | 200 Page<Ticket> |
-| POST   | /api/tickets     | TicketInput                  | 201 Ticket       |
-| PUT    | /api/tickets/:id | TicketUpdate（必含 version） | 200 Ticket       |
-| DELETE | /api/tickets/:id | id                           | 204              |
+| 方法   | 路径             | 输入                                                           | 成功             |
+| ------ | ---------------- | -------------------------------------------------------------- | ---------------- |
+| GET    | /api/members     | 查询参数：q、page、pageSize、sort、direction、role、status     | 200 Page<Member> |
+| GET    | /api/members/:id | 路径参数 id                                                    | 200 Member       |
+| POST   | /api/members     | JSON MemberInput                                               | 201 Member       |
+| PUT    | /api/members/:id | 路径参数 id；JSON MemberInput                                  | 200 Member       |
+| DELETE | /api/members/:id | 路径参数 id                                                    | 204              |
+| GET    | /api/tickets     | 查询参数：q、page、pageSize、sort、direction、status、priority | 200 Page<Ticket> |
+| POST   | /api/tickets     | JSON TicketInput                                               | 201 Ticket       |
+| PUT    | /api/tickets/:id | 路径参数 id；JSON TicketUpdate（必含 version）                 | 200 Ticket       |
+| DELETE | /api/tickets/:id | 路径参数 id                                                    | 204              |
 
-查询参数 q、page（从 1 开始）、pageSize（5/10/20）、sort、direction；模块另有 role/status 或 status/priority。非法 URL 参数恢复默认；所有查询条件进入 Query key。分页格式 { items, total, page, pageSize }。
+查询参数默认值：q 为空、page 为 1、pageSize 为 10、direction 为 asc；成员 sort 默认 name，工单 sort 默认 title。允许的 pageSize 为 5、10、20。列表响应为 `{ items, total, page, pageSize }`。字段与枚举、业务校验以对应 `schema.ts` 为准。
+
+非法 URL 查询参数按 schema 恢复默认；完整列表查询条件进入 Query key。
 
 错误 { code, message, fields?: Record<string,string> }：
 422 VALIDATION / INACTIVE_ASSIGNEE / INVALID_TRANSITION；

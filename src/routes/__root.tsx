@@ -1,27 +1,34 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
+import type { QueryClient } from '@tanstack/react-query';
+import {
+  createRootRouteWithContext,
+  Link,
+  Outlet,
+} from '@tanstack/react-router';
 import { ArrowRight, LayoutDashboard, Ticket, Users } from 'lucide-react';
 import { memberQuerySchema } from '../features/members';
 import { ticketQuerySchema } from '../features/tickets';
 import { Button } from '../shared/ui/button';
 
-export const Route = createRootRoute({
-  component: Layout,
-  errorComponent: ({ error, reset }) => (
-    <div role="alert" className="p-12">
-      <h1 className="text-xl">页面暂时无法显示</h1>
-      <p>{error instanceof Error ? error.message : '未知异常'}</p>
-      <Button onClick={reset}>重试</Button>
-    </div>
-  ),
-  notFoundComponent: () => (
-    <div className="p-12">
-      页面不存在。
-      <Link to="/members" search={memberQuerySchema.parse({})}>
-        返回成员管理
-      </Link>
-    </div>
-  ),
-});
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    component: Layout,
+    errorComponent: ({ error, reset }) => (
+      <div role="alert" className="p-12">
+        <h1 className="text-xl">页面暂时无法显示</h1>
+        <p>{error instanceof Error ? error.message : '未知异常'}</p>
+        <Button onClick={reset}>重试</Button>
+      </div>
+    ),
+    notFoundComponent: () => (
+      <div className="p-12">
+        页面不存在。
+        <Link to="/members" search={memberQuerySchema.parse({})}>
+          返回成员管理
+        </Link>
+      </div>
+    ),
+  },
+);
 
 function Layout() {
   return (

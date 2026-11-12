@@ -39,7 +39,7 @@ pnpm dev
 pnpm exec playwright install chromium
 ```
 
-CI 分别执行格式、lint、类型检查、测试、构建和 E2E；Git 提交前通过 Husky 和 lint-staged 检查暂存文件。
+Git 提交前通过 Husky 和 lint-staged 检查暂存文件。仓库当前未配置 CI workflow；需要在本地按 AGENTS.md 执行格式、lint、类型检查、测试、构建，并在路由、接口/Mock、业务交互或构建配置改动时运行 E2E。
 
 ## 接口与 Mock
 
@@ -47,6 +47,8 @@ CI 分别执行格式、lint、类型检查、测试、构建和 E2E；Git 提�
 设置 VITE_MOCK=false、VITE_API_URL 接入真实后端。
 
 [架构说明](docs/architecture.md) · [接口说明](docs/api.md)
+
+路由 loader 通过 QueryClient 预取当前 URL 对应的列表数据；QueryOptions 和 query key 位于业务模块 `api.ts`，页面管理 mutation 和页面反馈。详细数据边界与扩展规则见架构说明。
 
 ## 项目约定
 

@@ -8,7 +8,11 @@ import {
 } from './schema';
 import { request, queryString, emptyResponse } from '../../shared/api';
 
-export const ticketKeys = { all: ['tickets'] as const };
+export const ticketKeys = {
+  all: ['tickets'] as const,
+  lists: () => [...ticketKeys.all, 'list'] as const,
+  list: (query: TicketQuery) => [...ticketKeys.lists(), query] as const,
+};
 export const ticketsApi = {
   list: (query: TicketQuery, signal?: AbortSignal) =>
     request('/tickets?' + queryString(query), pageSchema(ticketSchema), {
@@ -31,6 +35,6 @@ export const ticketsApi = {
 };
 export const ticketsQuery = (query: TicketQuery) =>
   queryOptions({
-    queryKey: [...ticketKeys.all, 'list', query],
+    queryKey: ticketKeys.list(query),
     queryFn: ({ signal }) => ticketsApi.list(query, signal),
   });

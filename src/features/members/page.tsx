@@ -1,11 +1,11 @@
 import { SelectControl } from '../../shared/ui/select-control';
 import { Input } from '../../shared/ui/input';
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Plus, Users } from 'lucide-react';
-import { type Member, type MemberQuery } from './schema';
+import { type Member, type MemberInput, type MemberQuery } from './schema';
 import { errorMessage } from '../../shared/api';
 import { Button } from '../../shared/ui/button';
 import { DataTable } from '../../shared/ui/data-table';
@@ -21,13 +21,35 @@ export function MembersPage() {
   const query = useQuery(membersQuery(search));
   const [editing, setEditing] = useState<Member | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Member | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [deleteError, setDeleteError] = useState<string>();
   function update(patch: Partial<MemberQuery>) {
     void navigate({
       search: (previous) => ({ ...previous, page: 1, ...patch }),
     });
   }
+  const save = useMutation({
+    mutationFn: ({
+      input,
+      target,
+    }: {
+      input: MemberInput;
+      target: Member | 'new';
+    }) =>
+      target === 'new'
+        ? membersApi.create(input)
+        : membersApi.update(target.id, input),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: memberKeys.all });
+    },
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => membersApi.remove(id),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: memberKeys.all });
+      setDeleting(null);
+      if (query.data?.items.length === 1 && search.page > 1)
+        update({ page: search.page - 1 });
+    },
+  });
   const columns: ColumnDef<Member>[] = [
     {
       accessorKey: 'name',
@@ -73,8 +95,8 @@ export function MembersPage() {
           <Button
             variant="ghost"
             onClick={() => {
+              remove.reset();
               setDeleting(row.original);
-              setDeleteError(undefined);
             }}
           >
             删除
@@ -83,21 +105,6 @@ export function MembersPage() {
       ),
     },
   ];
-  async function remove() {
-    if (!deleting || deleteBusy) return;
-    setDeleteBusy(true);
-    try {
-      await membersApi.remove(deleting.id);
-      await client.invalidateQueries({ queryKey: memberKeys.all });
-      setDeleting(null);
-      if (query.data?.items.length === 1 && search.page > 1)
-        update({ page: search.page - 1 });
-    } catch (error) {
-      setDeleteError(errorMessage(error));
-    } finally {
-      setDeleteBusy(false);
-    }
-  }
   return (
     <section>
       <div className="mb-7 flex items-center justify-between">
@@ -213,20 +220,18 @@ export function MembersPage() {
           member={editing === 'new' ? undefined : editing}
           onClose={() => setEditing(null)}
           onSave={async (input) => {
-            if (editing === 'new') await membersApi.create(input);
-            else await membersApi.update(editing.id, input);
-            await client.invalidateQueries({ queryKey: memberKeys.all });
+            await save.mutateAsync({ input, target: editing });
           }}
         />
       )}
       {deleting && (
         <ConfirmDelete
           name={deleting.name}
-          busy={deleteBusy}
-          error={deleteError}
+          busy={remove.isPending}
+          error={remove.error ? errorMessage(remove.error) : undefined}
           onClose={() => setDeleting(null)}
           onConfirm={() => {
-            void remove();
+            if (!remove.isPending) remove.mutate(deleting.id);
           }}
         />
       )}

@@ -55,6 +55,7 @@ test('成员 CRUD、重复邮箱、筛选和关联删除保护', async ({ page }
   await expect(row).toContainText('启用');
   await row.getByRole('button', { name: '删除' }).click();
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(row).toHaveCount(0);
   await page.getByLabel('搜索成员').fill('');
   const linked = page.getByRole('row').filter({ hasText: 'chen@teamdesk.dev' });
@@ -149,10 +150,12 @@ test('关联成员的工单 CRUD、条件转换、动态项与历史停用负责
   });
   await row.getByRole('button', { name: '删除' }).click();
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(row).toHaveCount(0);
   await page.getByRole('link', { name: '成员管理' }).click();
   await memberRow.getByRole('button', { name: '删除' }).click();
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(memberRow).toHaveCount(0);
 });
 test('失败与并发冲突保留输入，重新打开使用最新版本', async ({ page }) => {
