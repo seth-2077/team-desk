@@ -43,6 +43,7 @@ test('成员 CRUD、重复邮箱、筛选和关联删除保护', async ({ page }
   await expect(row).toContainText('停用');
   await choose(page, page.getByLabel('状态筛选'), '停用');
   await page.getByLabel('搜索成员').fill('更新成员');
+  await page.getByLabel('搜索成员').press('Enter');
   await expect(
     page.getByRole('row').filter({ hasText: 'member@example.com' }),
   ).toBeVisible();
@@ -58,6 +59,7 @@ test('成员 CRUD、重复邮箱、筛选和关联删除保护', async ({ page }
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(row).toHaveCount(0);
   await page.getByLabel('搜索成员').fill('');
+  await page.getByLabel('搜索成员').press('Enter');
   const linked = page.getByRole('row').filter({ hasText: 'chen@teamdesk.dev' });
   await linked.getByRole('button', { name: '删除' }).click();
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
@@ -192,6 +194,8 @@ test('非法 URL 恢复默认、筛选刷新保留与键盘焦点可用', async 
   await expect(page.getByLabel('每页条数')).toHaveText('10 条 / 页');
   await choose(page, page.getByLabel('优先级筛选'), '高');
   await page.getByLabel('搜索工单').fill('支付');
+  await page.getByLabel('搜索工单').press('Enter');
+  await expect(page).toHaveURL(/q=%E6%94%AF%E4%BB%98/);
   await expect(
     page.getByRole('row').filter({ hasText: '更新团队使用手册' }),
   ).toHaveCount(0);

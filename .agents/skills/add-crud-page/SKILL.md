@@ -1,16 +1,22 @@
 ---
 name: add-crud-page
-description: 在 TeamDesk 新增常规 CRUD 业务模块，沿用契约、HTTP Mock、Query、URL 查询状态和公共组件；不用于特殊交互页面的强制套模。
+description: 为 TeamDesk 新增业务资源的列表、新建、编辑和删除功能，接入接口契约、HTTP Mock、Query 缓存与 URL 查询状态。
 ---
 
-从 src/features/members 参考真实实现，先读 AGENTS.md、docs/api.md。
+参考 `src/pages/members/page.tsx` 和 `src/api/members/` 实现常规 CRUD；有关联选择或业务约束时，参考 projects 与 tickets 中对应的实现，按需求选择功能。
 
-1. 在业务模块的 schema.ts 定义接口类型和必要校验；通用分页、错误结构复用 shared/api-types.ts。
-2. 为 src/mocks 增加固定数据、HTTP handlers、业务校验与 reset；测试响应符合 schema。
-3. 业务 api.ts 通过 src/shared/api.ts 发请求，Query key 包含完整查询，传入 signal。
-4. 页面复用 shared/ui 的 DataTable、FormDialog、Field、ConfirmDelete；表格只接收数据和回调。复杂表单用显式组合。
-5. 在 src/routes 创建文件路由并配置 validateSearch（routeTree.gen.ts 由插件生成）；列表查询以 URL 为主状态，筛选变化重置页码。
-6. 测试 CRUD 与领域约束、字段错误、失败保留输入；需要跨模块接口时仅从 index.ts 导入。
-7. 局部检查后 格式、lint、类型检查、测试和构建；涉及完整用户流程运行 pnpm test:e2e。
+## 接入资源
 
-不要复制整个成员模块后遗留无关字段，不要求特殊页面使用同一布局。
+- 在 `src/api/<资源>/` 定义 schemas、requests 和 queries；分页与错误协议复用 `src/api/types.ts`，请求经过 `src/api/client.ts`。
+- 列表 Query key 包含 schema 归一后的查询参数，queryFn 把 signal 传给请求。页面和 Loader 使用同一份 Query Options。
+- 在现有 Mock store、handlers 和 reset 中接入资源。唯一性、关联删除保护等服务端规则应在 HTTP 层执行，不能只靠页面校验。
+
+## 组装页面
+
+- 在 `src/router.tsx` 注册懒加载页面和列表 Loader；需要侧栏入口时更新 `src/layouts/app-layout.tsx` 的导航。
+- 查询参数通过资源 schema 解析，使用 `useSearchParams` 和 `mergeSearchParams` 更新。筛选、排序和每页条数改变时回到第一页；翻页保留当前查询。
+- 复用 SearchInput、SelectControl、DataTable、FormDialog 和 ConfirmDelete 的现有接口。列表呈现加载、空态和错误重试；表单实现采用 `implement-business-form` 的指导。
+- 保存和删除由页面 Mutation 处理，成功后失效资源的 Query key 前缀；有关联展示时，检查依赖方的缓存是否也需要刷新。
+- 删除失败保留确认框并显示错误；删除当前页最后一项后，若还有上一页则回退一页。重新打开删除确认框时清除上一次 Mutation 错误。
+
+验证新资源的 CRUD、URL 查询恢复和实际业务约束。接口与 Mock 测试参考 `src/mocks/members.test.ts`，浏览器流程参考 `e2e/business.spec.ts`；按 AGENTS.md 完成检查。

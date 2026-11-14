@@ -2,8 +2,8 @@ import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { z } from 'zod';
 import { server } from './server';
-import { request } from '../shared/api';
-import { envSchema } from '../shared/env';
+import { request } from '@/api/client';
+import { envSchema } from '@/lib/env';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());

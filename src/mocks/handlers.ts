@@ -1,17 +1,15 @@
 import { http, HttpResponse, delay } from 'msw';
-import {
-  memberInputSchema,
-  memberQuerySchema,
-} from '../features/members/schema';
+import { memberInputSchema, memberQuerySchema } from '@/api/members/schemas';
+import { projectInputSchema, projectQuerySchema } from '@/api/projects/schemas';
 import {
   ticketInputSchema,
   ticketUpdateSchema,
   ticketQuerySchema,
   transitions,
-} from '../features/tickets/schema';
-import { type ApiErrorBody } from '../shared/api-types';
+} from '@/api/tickets/schemas';
+import { type ApiErrorBody } from '@/api/types';
 import { resetStore, store } from './store';
-import { env } from '../shared/env';
+import { env } from '@/lib/env';
 const base =
   '*' + new URL(env.apiUrl, 'http://localhost').pathname.replace(/\/$/, '');
 
@@ -38,9 +36,11 @@ function invalid(error: {
 function paginate<T extends object>(
   items: T[],
   query: { page: number; pageSize: number; sort: string; direction: string },
+  rankOverride?: Record<string, number>,
 ) {
   const rank: Record<string, number> =
-    query.sort === 'priority'
+    rankOverride ??
+    (query.sort === 'priority'
       ? { low: 0, medium: 1, high: 2 }
       : query.sort === 'status'
         ? {
@@ -51,7 +51,7 @@ function paginate<T extends object>(
             resolved: 2,
             closed: 3,
           }
-        : {};
+        : {});
   const sorted = [...items].sort((a, b) => {
     const left = String(Reflect.get(a, query.sort));
     const right = String(Reflect.get(b, query.sort));
@@ -157,8 +157,78 @@ export const handlers = [
       return fail(404, 'NOT_FOUND', '成员不存在');
     if (store.tickets.some((t) => t.assigneeId === params.id))
       return fail(409, 'MEMBER_IN_USE', '该成员有关联工单，不能删除');
+    if (store.projects.some((p) => p.ownerId === params.id))
+      return fail(409, 'MEMBER_IN_USE', '该成员负责项目，不能删除');
     store.members = store.members.filter((m) => m.id !== params.id);
     return new HttpResponse(null, { status: 204 });
+  }),
+  http.get(base + '/projects', ({ request }) => {
+    const q = projectQuerySchema.parse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+    return paginate(
+      store.projects.filter(
+        (p) =>
+          (!q.q ||
+            (p.name + p.code).toLowerCase().includes(q.q.toLowerCase())) &&
+          (!q.status || q.status === p.status),
+      ),
+      q,
+      { in_progress: 0, archived: 1 },
+    );
+  }),
+  http.post(base + '/projects', async ({ request }) => {
+    const forced = await forcedFailure();
+    if (forced) return forced;
+    const parsed = projectInputSchema.safeParse(await request.json());
+    if (!parsed.success) return invalid(parsed.error);
+    if (store.projects.some((p) => p.code === parsed.data.code))
+      return fail(409, 'DUPLICATE_CODE', '项目编号已被使用', {
+        code: '该编号已被使用',
+      });
+    if (
+      !store.members.some(
+        (m) => m.id === parsed.data.ownerId && m.status === 'active',
+      )
+    )
+      return fail(422, 'INACTIVE_OWNER', '请选择启用成员', {
+        ownerId: '请选择启用成员',
+      });
+    const project = { ...parsed.data, id: 'p' + ++store.sequence };
+    store.projects.push(project);
+    return HttpResponse.json(project, { status: 201 });
+  }),
+  http.put(base + '/projects/:id', async ({ request, params }) => {
+    const forced = await forcedFailure();
+    if (forced) return forced;
+    const project = store.projects.find((p) => p.id === params.id);
+    if (!project) return fail(404, 'NOT_FOUND', '项目不存在');
+    const parsed = projectInputSchema.safeParse(await request.json());
+    if (!parsed.success) return invalid(parsed.error);
+    if (
+      store.projects.some(
+        (p) => p.id !== project.id && p.code === parsed.data.code,
+      )
+    )
+      return fail(409, 'DUPLICATE_CODE', '项目编号已被使用', {
+        code: '该编号已被使用',
+      });
+    const ownerChanged = parsed.data.ownerId !== project.ownerId;
+    if (project.status === 'archived' && ownerChanged)
+      return fail(409, 'ARCHIVED_OWNER_LOCKED', '项目已归档，负责人不可修改', {
+        ownerId: '项目已归档，负责人不可修改',
+      });
+    if (
+      ownerChanged &&
+      !store.members.some(
+        (m) => m.id === parsed.data.ownerId && m.status === 'active',
+      )
+    )
+      return fail(422, 'INACTIVE_OWNER', '请选择启用成员', {
+        ownerId: '请选择启用成员',
+      });
+    Object.assign(project, parsed.data);
+    return HttpResponse.json(project);
   }),
   http.get(base + '/tickets', ({ request }) => {
     const q = ticketQuerySchema.parse(

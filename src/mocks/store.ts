@@ -1,5 +1,6 @@
-import { type Member } from '../features/members/schema';
-import { type Ticket } from '../features/tickets/schema';
+import { type Member } from '@/api/members/schemas';
+import { type Project } from '@/api/projects/schemas';
+import { type Ticket } from '@/api/tickets/schemas';
 
 const initialMembers: Member[] = [
   {
@@ -53,14 +54,32 @@ const initialTickets: Ticket[] = [
     version: 1,
   },
 ];
+const initialProjects: Project[] = [
+  {
+    id: 'p1',
+    name: '支付链路重构',
+    code: 'TD-01',
+    status: 'in_progress',
+    ownerId: 'm2',
+  },
+  {
+    id: 'p2',
+    name: '团队手册改版',
+    code: 'TD-02',
+    status: 'archived',
+    ownerId: 'm1',
+  },
+];
 export const store = {
   members: structuredClone(initialMembers),
+  projects: structuredClone(initialProjects),
   tickets: structuredClone(initialTickets),
   sequence: 10,
   scenario: 'none' as 'none' | 'failure' | 'conflict',
 };
 export function resetStore() {
   store.members = structuredClone(initialMembers);
+  store.projects = structuredClone(initialProjects);
   store.tickets = structuredClone(initialTickets);
   store.sequence = 10;
   store.scenario = 'none';

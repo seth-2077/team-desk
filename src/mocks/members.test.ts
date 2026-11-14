@@ -8,9 +8,9 @@ import {
 } from 'vitest';
 import { server } from './server';
 import { resetStore } from './store';
-import { membersApi } from '../features/members/api';
-import { memberQuerySchema, memberSchema } from '../features/members/schema';
-import { pageSchema } from '../shared/api-types';
+import { membersApi } from '@/api/members/requests';
+import { memberQuerySchema, memberSchema } from '@/api/members/schemas';
+import { pageSchema } from '@/api/types';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 beforeEach(resetStore);

@@ -5,16 +5,15 @@
 ## 技术栈
 
 - React + TypeScript 单包项目，使用 Vite；pnpm 11.24.0，Node 24。
-- TanStack Router / Query / Table、React Hook Form + Zod、shadcn/ui + Tailwind CSS。
+- React Router 7 Data Mode（`createBrowserRouter` + `RouterProvider`）、TanStack Query / Table、React Hook Form + Zod、shadcn/ui + Tailwind CSS。
 
-## 架构约定
+## 工作约定
 
-- 接口类型与校验放在各业务模块的 `schema.ts`；新增或修改接口时，同步更新 `src/mocks` 和 `docs/api.md`。
-- `src/features` 按业务划分，跨模块只通过 `index.ts`；`src/shared` 不依赖业务模块。
-- HTTP 请求统一经过 `src/shared/api.ts`，页面和组件不直接调用 `fetch`。
-- URL 管理列表查询，Query 管理服务端数据，RHF 管理表单草稿；不要将服务端数据另存到 `useState` 或全局 store。
-- 复用 DataTable、FormDialog、Field、ConfirmDelete；复杂表单采用显式组合。
-- 改动接口前阅读 `docs/api.md`；新增模块或调整分层前阅读 `docs/architecture.md`。
+- 新增页面、调整目录或数据流前阅读 [架构文档](docs/architecture.md)，按其中的目录职责、依赖方向与测试归属实现。
+- 改动接口前阅读 [接口契约](docs/api.md)；接口变更同步更新资源 schema、请求、Mock 和接口文档。
+- HTTP 请求统一经过 `src/api/client.ts`；URL 管理列表查询，TanStack Query 管理服务端数据，RHF 管理表单草稿，不另行复制服务端数据到状态容器。
+- 新增实现前检查现有代码，优先复用 DataTable、FormDialog、Field、ConfirmDelete；复杂表单采用显式组合，不为单次使用的简单逻辑强制抽象。
+- 只调整当前任务需要的代码，不顺便重构无关业务；目录与命名保持稳定，实际维护问题出现时再调整。
 
 ## 命令与完成标准
 
@@ -23,7 +22,7 @@
 - 涉及路由、接口/Mock、业务交互或构建配置时，再运行 `pnpm test:e2e`。
 - 检查失败先修复，无法解决时如实说明阻塞，不得声称完成。
 - 修复使用 `pnpm format`、`pnpm lint:fix`；不得通过关闭规则或删除测试绕过问题。
-- 业务规则变更补充相关测试：Vitest / Testing Library 测试放在 `src`，使用 Mock 服务端的集成测试放在 `src/mocks`，E2E 放在 `e2e`。
+- 业务规则变更补充相关测试，测试归属见架构文档。
 - 与用户用中文交流，说明实际改动和验证结果。
 
 ## Skills

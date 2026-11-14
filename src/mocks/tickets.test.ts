@@ -8,17 +8,17 @@ import {
 } from 'vitest';
 import { server } from './server';
 import { resetStore, store } from './store';
-import { ticketsApi } from '../features/tickets/api';
-import { ticketsQuery } from '../features/tickets/api';
+import { ticketsApi } from '@/api/tickets/requests';
+import { ticketsQuery } from '@/api/tickets/queries';
 import {
   ticketInputSchema,
   ticketQuerySchema,
   ticketSchema,
   transitions,
   type TicketInput,
-} from '../features/tickets/schema';
-import { pageSchema } from '../shared/api-types';
-import { request } from '../shared/api';
+} from '@/api/tickets/schemas';
+import { pageSchema } from '@/api/types';
+import { request } from '@/api/client';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 beforeEach(resetStore);

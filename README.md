@@ -1,5 +1,7 @@
 # TeamDesk
 
+[![CI](https://github.com/seth-2077/team-desk/actions/workflows/ci.yml/badge.svg)](https://github.com/seth-2077/team-desk/actions/workflows/ci.yml)
+
 React + TypeScript 团队工单管理后台，使用 MSW 提供本地接口。
 
 ## 启动
@@ -20,6 +22,7 @@ pnpm dev
 - 工单增删改查、搜索筛选、排序分页、异步搜索负责人。
 - 故障影响范围、动态检查项、时间校验、状态流转、版本冲突。
 - 保存失败保留表单输入，历史停用负责人正常展示。
+- 项目登记、编号唯一校验、状态筛选、负责人仅限启用成员，归档后锁定负责人。
 
 ## 开发命令
 
@@ -39,7 +42,7 @@ pnpm dev
 pnpm exec playwright install chromium
 ```
 
-Git 提交前通过 Husky 和 lint-staged 检查暂存文件。仓库当前未配置 CI workflow；需要在本地按 AGENTS.md 执行格式、lint、类型检查、测试、构建，并在路由、接口/Mock、业务交互或构建配置改动时运行 E2E。
+Git 提交前通过 Husky 和 lint-staged 检查暂存文件。推送和 PR 由 GitHub Actions 执行 `.github/workflows/ci.yml`，覆盖格式、lint、类型检查、单元与集成测试、构建和 E2E，失败时上传 Playwright 结果。CI 已有 3 次运行记录（2026-11-12，全部通过），集中在同一轮开发内，尚无跨周期的失败修复记录；本地仍需按 AGENTS.md 在改动后先运行同一套检查，并在路由、接口/Mock、业务交互或构建配置改动时运行 E2E。
 
 ## 接口与 Mock
 
@@ -48,7 +51,7 @@ Git 提交前通过 Husky 和 lint-staged 检查暂存文件。仓库当前未�
 
 [架构说明](docs/architecture.md) · [接口说明](docs/api.md)
 
-路由 loader 通过 QueryClient 预取当前 URL 对应的列表数据；QueryOptions 和 query key 位于业务模块 `api.ts`，页面管理 mutation 和页面反馈。详细数据边界与扩展规则见架构说明。
+React Router loader 通过 QueryClient 预取当前 URL 对应的列表数据；QueryOptions 和 query key 位于 `src/api/<资源>/queries.ts`，页面管理 mutation 和页面反馈。详细数据边界与扩展规则见架构说明。
 
 ## 项目约定
 
@@ -56,4 +59,4 @@ AGENTS.md 为项目开发约定，CLAUDE.md 引入同一份内容。
 Skills 存于 .agents/skills，.claude/skills 使用相对符号链接共享。
 
 当前不包含真实认证、多租户、复杂权限与持久化。
-浏览器测试覆盖 Chromium；真实后端、其他浏览器及远端 CI 尚未实测。
+浏览器测试覆盖 Chromium；真实后端与其他浏览器尚未实测。CI 仅在 GitHub 托管 runner 上运行过 3 次，未在其他环境验证。

@@ -12,13 +12,13 @@ import {
 } from 'vitest';
 import { server } from './server';
 import { resetStore, store } from './store';
-import { ApiError } from '../shared/api';
+import { ApiError } from '@/api/client';
 import {
   TicketForm,
   toTicketForm,
   toTicketInput,
-} from '../features/tickets/components/ticket-form';
-import { type Ticket } from '../features/tickets/schema';
+} from '@/pages/tickets/ticket-form';
+import { type Ticket } from '@/api/tickets/schemas';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 beforeEach(resetStore);
@@ -58,7 +58,7 @@ test('故障必填影响范围；切回普通提交不包含影响范围', async
   expect(view.onSave).not.toHaveBeenCalled();
   await user.type(screen.getByLabelText('影响范围'), '支付服务');
   await user.click(screen.getByLabelText('工单类型'));
-  await user.click(screen.getByRole('option', { name: '普通工单' }));
+  await user.click(await screen.findByRole('option', { name: '普通工单' }));
   expect(screen.queryByLabelText('影响范围')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: /^保存$/ }));
   await waitFor(() => expect(view.onSave).toHaveBeenCalledTimes(1));

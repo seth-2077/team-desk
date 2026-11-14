@@ -1,57 +1,39 @@
-import { readdirSync } from 'node:fs';
-import { URL } from 'node:url';
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import hooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
-const featureNames = readdirSync(new URL('./src/features', import.meta.url), {
-  withFileTypes: true,
-})
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .sort();
-
-const compositionImports = [
-  '**/app/**',
-  '**/routes/**',
-  '**/routes',
-  '**/mocks/**',
-  '**/mocks',
-  '**/main',
-  '**/main.tsx',
-  '**/routeTree.gen',
-  '**/routeTree.gen.ts',
+const legacyImports = [
+  {
+    group: ['**/features/**', '**/features', '@/features/**', '@/features'],
+    message:
+      '项目已取消 features 目录，请使用 pages / components / api / hooks / lib。',
+  },
+  {
+    group: ['**/shared/**', '**/shared', '@/shared/**', '@/shared'],
+    message: '项目已取消 shared 目录，请使用 components / api / hooks / lib。',
+  },
 ];
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+const boundary = (group, message) => ({ group, message });
 
-function createFeatureBoundaryConfig(feature) {
-  const privateFeatureImports = featureNames
-    .filter((name) => name !== feature)
-    .map((name) => ({
-      regex: String.raw`(?:^|/)(?:features/)?${escapeRegExp(name)}/(?!index(?:\.tsx?)?$)`,
-      message: '跨业务模块只通过公开 index.ts 导入。',
-    }));
+const pageImports = ['@/pages', '@/pages/**', '**/pages', '**/pages/**'];
+const componentImports = [
+  '@/components',
+  '@/components/**',
+  '**/components',
+  '**/components/**',
+];
+const apiImports = ['@/api', '@/api/**', '**/api', '**/api/**'];
+const hookImports = ['@/hooks', '@/hooks/**', '**/hooks', '**/hooks/**'];
+const mockImports = ['@/mocks', '@/mocks/**', '**/mocks', '**/mocks/**'];
 
+function restrictedImports(patterns) {
   return {
-    files: [`src/features/${feature}/**/*.{ts,tsx}`],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: compositionImports,
-              message: '业务模块不依赖应用入口、路由或 Mock。',
-            },
-            ...privateFeatureImports,
-          ],
-        },
-      ],
-    },
+    'no-restricted-imports': [
+      'error',
+      { patterns: [...legacyImports, ...patterns] },
+    ],
   };
 }
 
@@ -92,32 +74,65 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/shared/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: ['**/features/**', '**/features', ...compositionImports],
-        },
-      ],
-    },
+    files: ['src/api/**/*.{ts,tsx}'],
+    rules: restrictedImports([
+      boundary(pageImports, 'API 层不依赖页面。'),
+      boundary(componentImports, 'API 层不依赖组件。'),
+      boundary(mockImports, 'API 层不依赖 Mock。'),
+      boundary(
+        hookImports,
+        '依赖方向应为 hooks → api，API 层不反向依赖 hooks。',
+      ),
+    ]),
   },
-  ...featureNames.map(createFeatureBoundaryConfig),
+  {
+    files: ['src/components/**/*.{ts,tsx}'],
+    rules: restrictedImports([
+      boundary(pageImports, '跨页面组件不依赖具体页面。'),
+      boundary(mockImports, '跨页面组件不依赖 Mock。'),
+    ]),
+  },
+  {
+    files: ['src/hooks/**/*.{ts,tsx}'],
+    rules: restrictedImports([
+      boundary(pageImports, '通用 hooks 不依赖页面。'),
+      boundary(componentImports, '通用 hooks 不依赖组件。'),
+      boundary(mockImports, '通用 hooks 不依赖 Mock。'),
+    ]),
+  },
+  {
+    files: ['src/lib/**/*.{ts,tsx}'],
+    rules: restrictedImports([
+      boundary(pageImports, '通用工具不依赖页面。'),
+      boundary(componentImports, '通用工具不依赖组件。'),
+      boundary(apiImports, '通用工具不依赖 API 层。'),
+      boundary(hookImports, '通用工具不依赖 hooks。'),
+      boundary(mockImports, '通用工具不依赖 Mock。'),
+    ]),
+  },
+  {
+    files: ['src/mocks/**/*.{ts,tsx}'],
+    rules: restrictedImports([]),
+  },
+  {
+    files: ['src/pages/**/*.{ts,tsx}'],
+    rules: restrictedImports([]),
+  },
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/shared/api.ts'],
+    ignores: ['src/api/client.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector:
             'CallExpression[callee.type="Identifier"][callee.name="fetch"]',
-          message: 'HTTP 请求统一使用 shared/api.ts。',
+          message: 'HTTP 请求统一使用 api/client.ts。',
         },
         {
           selector:
             'CallExpression[callee.type="MemberExpression"][callee.property.name="fetch"][callee.object.name=/^(window|globalThis)$/]',
-          message: 'HTTP 请求统一使用 shared/api.ts。',
+          message: 'HTTP 请求统一使用 api/client.ts。',
         },
       ],
     },
